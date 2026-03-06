@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>密码生成器 · 配置面板</title>
+  </head>
+  <body>
+    <form id="passwordForm">
+      <div>
+        <label for="baseStr">原始字符串（必须包含）:</label>
+        <input
+          type="text"
+          id="baseStr"
+          value="hello"
+          placeholder="例如 hello"
+        />
+      </div>
+
+      <div>
+        <label for="pwdLength">密码长度:</label>
+        <input type="number" id="pwdLength" value="12" min="1" step="1" />
+      </div>
+
+      <div>
+        <label for="shuffle">允许乱序:</label>
+        <input type="checkbox" id="shuffle" />
+      </div>
+
+      <div>
+        <label for="allowSeparator">允许分隔 (字符间可插入):</label>
+        <input type="checkbox" id="allowSeparator" />
+      </div>
+
+      <div>
+        <button type="button" id="generateBtn">✨ 生成新密码（回车）</button>
+      </div>
+    </form>
+
+    <hr />
+
+    <!-- 结果显示区域，纯文本输出，无样式 -->
+    <div>
+      <strong>生成的密码:</strong>
+      <span id="resultDisplay">(点击生成)</span>
+    </div>
+
+    <div>
+      <strong>当前参数:</strong>
+      <pre id="paramsDisplay" style="display: inline; margin: 0">
+(等待生成)</pre
+      >
+    </div>
+    <script src="index.js"></script>
+    <script>
+      (function () {
+        // 获取DOM元素
+        const baseStrInput = document.getElementById("baseStr");
+        const pwdLengthInput = document.getElementById("pwdLength");
+        const shuffleCheck = document.getElementById("shuffle");
+        const allowSeparatorCheck = document.getElementById("allowSeparator");
+        const generateBtn = document.getElementById("generateBtn");
+        const resultSpan = document.getElementById("resultDisplay");
+        const paramsPre = document.getElementById("paramsDisplay");
+
+        // 辅助函数：获取当前表单值
+        function getFormValues() {
+          return {
+            str: baseStrInput.value,
+            length: parseInt(pwdLengthInput.value, 10),
+            shuffle: shuffleCheck.checked,
+            allowSeparator: allowSeparatorCheck.checked,
+          };
+        }
+
+        // 辅助函数：验证长度有效性
+        function isValidLength(length, minLength) {
+          return !isNaN(length) && length >= minLength;
+        }
+
+        // 核心函数：生成密码并返回结果（纯函数式）
+        function tryGeneratePassword() {
+          const { str, length, shuffle, allowSeparator } = getFormValues();
+
+          // 验证输入
+          if (!isValidLength(length, 1)) {
+            return { success: false, message: "❌ 长度必须为正整数" };
+          }
+
+          try {
+            const password = generatePassword(
+              str,
+              length,
+              shuffle,
+              allowSeparator
+            );
+            return { success: true, value: password };
+          } catch (error) {
+            return { success: false, message: `❌ 错误: ${error.message}` };
+          }
+        }
+
+        // 更新UI显示
+        function updateDisplay() {
+          const { str, length, shuffle, allowSeparator } = getFormValues();
+
+          // 更新参数显示
+          const base = str || "(空字符串)";
+          paramsPre.textContent = `str="${base}", length=${length}, shuffle=${shuffle}, allowSeparator=${allowSeparator}`;
+
+          // 生成并显示密码
+          const result = tryGeneratePassword();
+          resultSpan.textContent = result.success
+            ? result.value
+            : result.message;
+        }
+
+        // 初始化表单默认值
+        function initFormDefaults() {
+          if (!baseStrInput.value) baseStrInput.value = "hello";
+          if (!pwdLengthInput.value) pwdLengthInput.value = "12";
+        }
+
+        // 事件监听 - 使用统一的更新函数
+        generateBtn.addEventListener("click", updateDisplay);
+
+        // 回车键支持
+        baseStrInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") updateDisplay();
+        });
+
+        pwdLengthInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") updateDisplay();
+        });
+
+        // 页面加载
+        window.addEventListener("load", () => {
+          initFormDefaults();
+          updateDisplay();
+        });
+
+        // 可选：实时更新（取消注释即可启用）
+        // shuffleCheck.addEventListener('change', updateDisplay);
+        // allowSeparatorCheck.addEventListener('change', updateDisplay);
+      })();
+    </script>
+  </body>
+</html>
